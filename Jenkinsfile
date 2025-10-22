@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    triggers {
-        pollSCM('* * * * *')
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -14,6 +10,7 @@ pipeline {
 
         stage('Setup .NET') {
             steps {
+                bat 'dotnet --list-sdks'
                 bat 'dotnet --version'
             }
         }
@@ -32,20 +29,14 @@ pipeline {
 
         stage('Test') {
             steps {
-                bat 'dotnet test --no-build --verbosity normal'
+                bat 'dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx"'
             }
         }
     }
 
     post {
         always {
-            junit '**/TestResults/*.xml'
-        }
-        success {
-            echo '✅ Build and tests succeeded!'
-        }
-        failure {
-            echo '❌ Build or tests failed!'
+            junit '**/TestResults/*.trx'
         }
     }
 }
