@@ -1,48 +1,39 @@
-pipeline {
+pipeline{
     agent any
-
-    environment {
-        DOTNET_CLI_TELEMETRY_OPTOUT = '1'
-        DOTNET_SKIP_FIRST_TIME_EXPERIENCE = '1'
-    }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
+    
+    stages{
+        stage("Restore the dependencies"){
+            when { 
+                anyOf {
+                    branch 'main'
+                    branch 'feature'
+                }
+            }
+            steps{
+                bat 'dotnet restore' 
             }
         }
-
-        stage('Setup .NET') {
-            steps {
-                bat 'dotnet --version'
+        stage("Build the application"){
+            when { 
+                anyOf {
+                    branch 'main'
+                    branch 'feature'
+                }
+            }
+            steps{
+                bat 'dotnet build --no-restore' 
             }
         }
-
-        stage('Restore dependencies') {
-            steps {
-                bat 'dotnet restore'
+        stage("Run the tests"){
+            when { 
+                anyOf {
+                    branch 'main'
+                    branch 'feature'
+                }
             }
-        }
-
-        stage('Build') {
-            steps {
-                bat 'dotnet build --no-restore --configuration Release'
+            steps{
+                bat 'dotnet test --no-build --verbosity normal' 
             }
-        }
-
-        stage('Test') {
-            steps {
-                bat 'dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test_results.trx"'
-            }
-        }
-    }
-
-    post {
-        always {
-            junit '**/TestResults/*.trx'
-
-            echo 'Pipeline finished.'
         }
     }
 }
