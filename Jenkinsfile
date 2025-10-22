@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        DOTNET_CLI_TELEMETRY_OPTOUT = '1'
+        DOTNET_SKIP_FIRST_TIME_EXPERIENCE = '1'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -10,7 +15,6 @@ pipeline {
 
         stage('Setup .NET') {
             steps {
-                bat 'dotnet --list-sdks'
                 bat 'dotnet --version'
             }
         }
@@ -29,7 +33,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                bat 'dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx"'
+                bat 'dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test_results.trx"'
             }
         }
     }
@@ -37,6 +41,8 @@ pipeline {
     post {
         always {
             junit '**/TestResults/*.trx'
+
+            echo 'Pipeline finished.'
         }
     }
 }
